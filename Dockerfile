@@ -12,7 +12,9 @@ RUN npm install
 # Copy source code
 COPY . .
 
-# Build the app
+# Build the app with API URL
+ARG REACT_APP_API_URL=http://localhost:8000/api
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
 RUN npm run build
 
 # Production stage

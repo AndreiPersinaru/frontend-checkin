@@ -1,0 +1,27 @@
+# fly.toml app configuration file for gym-checkin-frontend
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'gym-checkin-frontend'
+primary_region = 'fra'
+
+[build]
+  dockerfile = 'Dockerfile'
+  args = { REACT_APP_API_URL = 'https://gym-checkin-backend.fly.dev/api' }
+
+[env]
+  PORT = '80'
+
+[http_service]
+  internal_port = 80
+  force_https = false
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+[[vm]]
+  memory = '512mb'
+  cpu_kind = 'shared'
+  cpus = 1
+  memory_mb = 512
