@@ -36,7 +36,31 @@ function MonthlyStats() {
     }
 
     useEffect(() => {
-        loadStats();
+        let cancelled = false;
+        const fetchStats = async () => {
+            setLoading(true);
+            setError("");
+
+            try {
+                const response = await getMonthlyStats(selectedYear, selectedMonth);
+                const athletes = response.data.athletes || [];
+                if (!cancelled) {
+                    setStats(Array.isArray(athletes) ? athletes : []);
+                }
+            } catch (err) {
+                if (!cancelled) {
+                    setError("Eroare la încărcarea statisticilor");
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoading(false);
+                }
+            }
+        };
+        fetchStats();
+        return () => {
+            cancelled = true;
+        };
     }, [selectedYear, selectedMonth]);
 
     const loadStats = async () => {
