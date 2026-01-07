@@ -1,0 +1,63 @@
+/* Additional mobile-specific styles for CheckInPage */
+
+/* Prevent iOS zoom on input focus while keeping accessibility */
+@supports (-webkit-touch-callout: none) {
+    /* iOS specific */
+    input[type="text"],
+    input[type="password"],
+    input[type="tel"],
+    select {
+        font-size: 16px !important;
+    }
+}
+
+/* Better touch targets for mobile */
+.btn-block {
+    width: 100%;
+    min-height: 48px;
+}
+
+/* Ensure forms are mobile-friendly */
+form {
+    width: 100%;
+}
+
+/* Better checkbox labels on mobile */
+label {
+    -webkit-tap-highlight-color: transparent;
+    user-select: none;
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* Additional mobile optimizations for CheckInPage */
+@media (max-width: 700px) {
+    /* Center check-in card better on small screens */
+    .card[style*="marginTop"] {
+        margin-top: 20px !important;
+    }
+
+    /* Make session info box more readable */
+    .card > div[style*="background: #f9fafb"] {
+        padding: 14px !important;
+    }
+
+    /* Better spacing for phone number display */
+    .card > div[style*="background: #f9fafb"] p {
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+    /* Ensure manager login link is easily tappable */
+    .card a {
+        display: inline-block;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
