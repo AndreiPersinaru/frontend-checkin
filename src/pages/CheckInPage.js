@@ -213,7 +213,6 @@ function CheckInPage() {
         setError("");
         setSuccess("");
         setShowPinModal(false);
-        setRemovingAthlete(null);
     };
 
     const handleRemoveAthlete = async (athleteId, athleteName) => {
