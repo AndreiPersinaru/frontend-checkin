@@ -24,7 +24,6 @@ function CheckInPage() {
     const [athletePin, setAthletePin] = useState("");
     const [addingViaPin, setAddingViaPin] = useState(false);
     const [showPinModal, setShowPinModal] = useState(false);
-    const [removingAthlete, setRemovingAthlete] = useState(null);
 
     useEffect(() => {
         const savedPhone = localStorage.getItem("athlete_phone");
@@ -229,15 +228,7 @@ function CheckInPage() {
             } catch (err) {
                 setError("Eroare la dezasocierea sportivului.");
             }
-            setRemovingAthlete(null);
         }
-    };
-
-    const copyPinToClipboard = () => {
-        navigator.clipboard.writeText(newAthletePin).then(() => {
-            setSuccess("PIN copiat în clipboard!");
-            setTimeout(() => setSuccess(""), 2000);
-        });
     };
 
     const formatTime = (time) => time.substring(0, 5);

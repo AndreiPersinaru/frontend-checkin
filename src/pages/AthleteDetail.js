@@ -93,6 +93,7 @@ function AthleteDetail() {
     useEffect(() => {
         loadAthlete();
         loadPhones();
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [athleteId]);
 
     useEffect(() => {
@@ -101,6 +102,7 @@ function AthleteDetail() {
         loadAttendance();
         localStorage.setItem(`athleteCalendarMonth_${athleteId}`, selectedMonth);
         localStorage.setItem(`athleteCalendarYear_${athleteId}`, selectedYear);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [athleteId, selectedMonth, selectedYear]);
 
     const attendanceMap = useMemo(() => {
