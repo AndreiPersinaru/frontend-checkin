@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import CheckInPage from "./pages/CheckInPage";
 import ManagerLogin from "./pages/ManagerLogin";
 import ManagerDashboard from "./pages/ManagerDashboard";
+import AthleteDetail from "./pages/AthleteDetail";
 import { isAuthenticated, logout } from "./services/auth";
 
 function App() {
@@ -24,6 +25,7 @@ function App() {
                     <Route path="/" element={<CheckInPage />} />
                     <Route path="/manager/login" element={<ManagerLogin setIsAuth={setIsAuth} />} />
                     <Route path="/manager/dashboard" element={isAuth ? <ManagerDashboard onLogout={handleLogout} /> : <CheckInPage />} />
+                    <Route path="/athlete/:athleteId" element={isAuth ? <AthleteDetail /> : <CheckInPage />} />
                 </Routes>
             </div>
         </Router>

@@ -1,19 +1,31 @@
 import React, { useState, useEffect } from "react";
-import { getMonthlyStats, updateAthleteSubscription, updateAthlete } from "../services/api";
+import { useNavigate } from "react-router-dom";
+import { getMonthlyStats, updateAthleteSubscription, getAppSettings } from "../services/api";
 
 function MonthlyStats() {
+    const navigate = useNavigate();
     const [stats, setStats] = useState([]);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState("");
     const [togglingId, setTogglingId] = useState(null);
-    const [editingId, setEditingId] = useState(null);
-    const [editName, setEditName] = useState("");
-    const [editPhone, setEditPhone] = useState("");
-    const [savingId, setSavingId] = useState(null);
+    const [searchQuery, setSearchQuery] = useState("");
+    const [appSettings, setAppSettings] = useState(null);
 
     const currentDate = new Date();
-    const [selectedYear, setSelectedYear] = useState(currentDate.getFullYear());
-    const [selectedMonth, setSelectedMonth] = useState(currentDate.getMonth() + 1);
+
+    // Inițializare cu valori din localStorage sau default
+    const getInitialMonth = () => {
+        const saved = localStorage.getItem("statsSelectedMonth");
+        return saved ? parseInt(saved) : currentDate.getMonth() + 1;
+    };
+
+    const getInitialYear = () => {
+        const saved = localStorage.getItem("statsSelectedYear");
+        return saved ? parseInt(saved) : currentDate.getFullYear();
+    };
+
+    const [selectedYear, setSelectedYear] = useState(getInitialYear());
+    const [selectedMonth, setSelectedMonth] = useState(getInitialMonth());
 
     const months = [
         { value: 1, label: "Ianuarie" },
@@ -44,6 +56,10 @@ function MonthlyStats() {
             try {
                 const response = await getMonthlyStats(selectedYear, selectedMonth);
                 const athletes = response.data.athletes || [];
+
+                const settingsResponse = await getAppSettings();
+                setAppSettings(settingsResponse.data);
+
                 if (!cancelled) {
                     setStats(Array.isArray(athletes) ? athletes : []);
                 }
@@ -63,67 +79,36 @@ function MonthlyStats() {
         };
     }, [selectedYear, selectedMonth]);
 
-    const loadStats = async () => {
-        setLoading(true);
-        setError("");
-
-        try {
-            const response = await getMonthlyStats(selectedYear, selectedMonth);
-            const athletes = response.data.athletes || [];
-            setStats(Array.isArray(athletes) ? athletes : []);
-        } catch (err) {
-            setError("Eroare la încărcarea statisticilor");
-        } finally {
-            setLoading(false);
-        }
-    };
-
     const handleToggleSubscription = async (athleteId, currentStatus) => {
         setTogglingId(athleteId);
         try {
             await updateAthleteSubscription(athleteId, !currentStatus);
-            // Reîncarcă statisticile după toggle
-            await loadStats();
             setError("");
+            // Trigger data refresh by fetching directly
+            setLoading(true);
+            const response = await getMonthlyStats(selectedYear, selectedMonth);
+            const athletes = response.data.athletes || [];
+            const settingsResponse = await getAppSettings();
+            setAppSettings(settingsResponse.data);
+            setStats(Array.isArray(athletes) ? athletes : []);
         } catch (err) {
             setError("Eroare la actualizarea abonamentului");
         } finally {
             setTogglingId(null);
+            setLoading(false);
         }
     };
 
-    const startEditAthlete = (athlete) => {
-        setEditingId(athlete.athlete_id);
-        setEditName(athlete.athlete_name || "");
-        setEditPhone((athlete.phone_number || "").replace(/\D/g, ""));
-        setError("");
-    };
+    const calculatePayment = (athlete) => {
+        if (!appSettings) return 0;
 
-    const cancelEdit = () => {
-        setEditingId(null);
-        setEditName("");
-        setEditPhone("");
-    };
+        const sessionCost = parseFloat(appSettings.session_cost) || 20;
+        const subscriptionCost = parseFloat(appSettings.subscription_cost) || 75;
 
-    const saveEditAthlete = async () => {
-        if (!editName.trim()) {
-            setError("Completează numele sportivului");
-            return;
-        }
-        const phone = editPhone.replace(/\D/g, "");
-        if (phone && (!/^\d{10}$/.test(phone) || !phone.startsWith("07"))) {
-            setError("Telefonul trebuie să fie 10 cifre și să înceapă cu 07");
-            return;
-        }
-        setSavingId(editingId);
-        try {
-            await updateAthlete(editingId, { name: editName.trim(), phone_number: phone });
-            await loadStats();
-            cancelEdit();
-        } catch (err) {
-            setError("Eroare la actualizarea sportivului");
-        } finally {
-            setSavingId(null);
+        if (athlete.subscription_active) {
+            return subscriptionCost;
+        } else {
+            return athlete.checkin_count * sessionCost;
         }
     };
 
@@ -141,27 +126,82 @@ function MonthlyStats() {
 
         setSelectedMonth(newMonth);
         setSelectedYear(newYear);
+        localStorage.setItem("statsSelectedMonth", newMonth);
+        localStorage.setItem("statsSelectedYear", newYear);
+    };
+
+    const handleMonthSelect = (newMonth) => {
+        setSelectedMonth(parseInt(newMonth));
+        localStorage.setItem("statsSelectedMonth", newMonth);
+    };
+
+    const handleYearSelect = (newYear) => {
+        setSelectedYear(parseInt(newYear));
+        localStorage.setItem("statsSelectedYear", newYear);
     };
 
     return (
         <div className="card">
             <h2>Statistici prezență</h2>
 
-            <div
-                style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "15px",
-                    marginBottom: "20px",
-                    flexWrap: "wrap",
-                }}
-            >
-                <button className="btn btn-secondary" onClick={() => handleMonthChange(-1)} style={{ padding: "12px 16px", marginBottom: "14px" }}>
+            <style>{`
+                .month-navigation-container {
+                    display: flex;
+                    align-items: center;
+                    gap: 15px;
+                    margin-bottom: 20px;
+                    flex-wrap: wrap;
+                }
+                
+                .month-navigation-container .btn-prev,
+                .month-navigation-container .btn-next {
+                    white-space: nowrap;
+                    min-height: 44px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                }
+                
+                @media (max-width: 767px) {
+                    .month-navigation-container {
+                        display: grid;
+                        grid-template-columns: 1fr 1fr;
+                        gap: 10px;
+                    }
+                    
+                    .month-navigation-container .btn-prev {
+                        grid-column: 1;
+                        grid-row: 1;
+                    }
+                    
+                    .month-navigation-container .btn-next {
+                        grid-column: 2;
+                        grid-row: 1;
+                    }
+                    
+                    .month-navigation-container .month-selectors {
+                        grid-column: 1 / 3;
+                        grid-row: 2;
+                        display: flex;
+                        justify-content: center;
+                        gap: 10px;
+                    }
+                    
+                    .month-navigation-container .btn-prev,
+                    .month-navigation-container .btn-next {
+                        font-size: 13px;
+                        padding: 10px 8px;
+                    }
+                }
+            `}</style>
+
+            <div className="month-navigation-container">
+                <button className="btn btn-secondary btn-prev" onClick={() => handleMonthChange(-1)}>
                     ← Luna anterioară
                 </button>
 
-                <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
-                    <select className="select" value={selectedMonth} onChange={(e) => setSelectedMonth(parseInt(e.target.value))} style={{ width: "auto" }}>
+                <div className="month-selectors" style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+                    <select className="select" value={selectedMonth} onChange={(e) => handleMonthSelect(e.target.value)} style={{ width: "auto" }}>
                         {months.map((month) => (
                             <option key={month.value} value={month.value}>
                                 {month.label}
@@ -169,7 +209,7 @@ function MonthlyStats() {
                         ))}
                     </select>
 
-                    <select className="select" value={selectedYear} onChange={(e) => setSelectedYear(parseInt(e.target.value))} style={{ width: "auto" }}>
+                    <select className="select" value={selectedYear} onChange={(e) => handleYearSelect(e.target.value)} style={{ width: "auto" }}>
                         {years.map((year) => (
                             <option key={year} value={year}>
                                 {year}
@@ -178,9 +218,26 @@ function MonthlyStats() {
                     </select>
                 </div>
 
-                <button className="btn btn-secondary" onClick={() => handleMonthChange(1)} style={{ padding: "12px 16px", marginBottom: "14px" }}>
+                <button className="btn btn-secondary btn-next" onClick={() => handleMonthChange(1)}>
                     Luna următoare →
                 </button>
+            </div>
+
+            {/* Search Filter */}
+            <div className="form-group" style={{ marginBottom: "20px" }}>
+                <input
+                    type="text"
+                    className="input"
+                    placeholder="Caută sportiv după nume..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    style={{ width: "100%", maxWidth: "400px" }}
+                />
+                {searchQuery && (
+                    <small style={{ color: "#666", display: "block", marginTop: "5px" }}>
+                        Găsite: {stats.filter((athlete) => athlete.athlete_name.toLowerCase().includes(searchQuery.toLowerCase())).length} rezultate
+                    </small>
+                )}
             </div>
 
             {error && <div className="error">{error}</div>}
@@ -189,7 +246,7 @@ function MonthlyStats() {
                 <div style={{ textAlign: "center", padding: "20px" }}>Se încarcă...</div>
             ) : (
                 <>
-                    {stats.length === 0 ? (
+                    {stats.filter((athlete) => athlete.athlete_name.toLowerCase().includes(searchQuery.toLowerCase())).length === 0 ? (
                         <div
                             style={{
                                 textAlign: "center",
@@ -198,8 +255,8 @@ function MonthlyStats() {
                                 borderRadius: "8px",
                             }}
                         >
-                            <p style={{ fontSize: "18px", color: "#6c757d" }}>
-                                Nu există date pentru {months.find((m) => m.value === selectedMonth)?.label} {selectedYear}
+                            <p style={{ color: "#666", margin: 0 }}>
+                                {searchQuery ? `Nu s-au găsit sportivi care să corespundă căutării "${searchQuery}"` : "Nicio prezență înregistrată în această lună"}
                             </p>
                         </div>
                     ) : (
@@ -217,13 +274,19 @@ function MonthlyStats() {
                                     Rezumat {months.find((m) => m.value === selectedMonth)?.label} {selectedYear}
                                 </h3>
                                 <p style={{ margin: "5px 0", fontSize: "16px" }}>
-                                    <strong>Total sportivi activi:</strong> {stats.length}
+                                    <strong>Total sportivi activi:</strong> {stats.filter((athlete) => athlete.athlete_name.toLowerCase().includes(searchQuery.toLowerCase())).length}
                                 </p>
                                 <p style={{ margin: "5px 0", fontSize: "16px" }}>
-                                    <strong>Total check-in-uri:</strong> {stats.reduce((sum, s) => sum + s.checkin_count, 0)}
+                                    <strong>Total check-in-uri:</strong> {stats.filter((athlete) => athlete.athlete_name.toLowerCase().includes(searchQuery.toLowerCase())).reduce((sum, s) => sum + s.checkin_count, 0)}
                                 </p>
                                 <p style={{ margin: "5px 0", fontSize: "16px" }}>
-                                    <strong>Media check-in-uri/sportiv:</strong> {(stats.reduce((sum, s) => sum + s.checkin_count, 0) / stats.length).toFixed(1)}
+                                    <strong>Media check-in-uri/sportiv:</strong>{" "}
+                                    {stats.filter((athlete) => athlete.athlete_name.toLowerCase().includes(searchQuery.toLowerCase())).length > 0
+                                        ? (
+                                              stats.filter((athlete) => athlete.athlete_name.toLowerCase().includes(searchQuery.toLowerCase())).reduce((sum, s) => sum + s.checkin_count, 0) /
+                                              stats.filter((athlete) => athlete.athlete_name.toLowerCase().includes(searchQuery.toLowerCase())).length
+                                          ).toFixed(1)
+                                        : "0.0"}
                                 </p>
                             </div>
 
@@ -231,108 +294,63 @@ function MonthlyStats() {
                                 <table className="table">
                                     <thead>
                                         <tr>
-                                            <th>#</th>
+                                            <th style={{ width: "50px" }}>#</th>
                                             <th>Nume Sportiv</th>
-                                            <th>Telefon</th>
-                                            <th>Check-in-uri</th>
-                                            <th>Abonament</th>
-                                            <th>Plată</th>
+                                            <th style={{ width: "120px", textAlign: "center" }}>Check-in-uri</th>
+                                            <th style={{ width: "100px", textAlign: "center" }}>Abonament</th>
+                                            <th style={{ width: "100px", textAlign: "center" }}>Plată</th>
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {stats.map((athlete, index) => {
-                                            const checkInCount = athlete.checkin_count || 0;
-                                            const isSubscriptionActive = athlete.subscription_active;
-                                            const paymentAmount = checkInCount * 75;
+                                        {stats
+                                            .filter((athlete) => athlete.athlete_name.toLowerCase().includes(searchQuery.toLowerCase()))
+                                            .map((athlete, index) => {
+                                                const checkInCount = athlete.checkin_count || 0;
+                                                const isSubscriptionActive = athlete.subscription_active;
+                                                const paymentAmount = calculatePayment(athlete);
 
-                                            return (
-                                                <tr key={athlete.athlete_id}>
-                                                    <td>{index + 1}</td>
-                                                    <td>
-                                                        {editingId === athlete.athlete_id ? (
-                                                            <input className="input" value={editName} onChange={(e) => setEditName(e.target.value)} style={{ maxWidth: "180px" }} />
-                                                        ) : (
-                                                            <>
-                                                                <strong>{athlete.athlete_name}</strong>
-                                                                <button className="btn btn-link" style={{ marginLeft: "8px", padding: 0, fontSize: "12px" }} onClick={() => startEditAthlete(athlete)}>
-                                                                    Editează
-                                                                </button>
-                                                            </>
-                                                        )}
-                                                    </td>
-                                                    <td>
-                                                        {editingId === athlete.athlete_id ? (
-                                                            <input
-                                                                className="input"
-                                                                value={editPhone}
-                                                                onChange={(e) => setEditPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-                                                                placeholder="07..."
-                                                                style={{ maxWidth: "130px" }}
-                                                            />
-                                                        ) : (
-                                                            <code style={{ color: "#666" }}>{athlete.phone_number || "N/A"}</code>
-                                                        )}
-                                                    </td>
-                                                    <td>
-                                                        <strong style={{ color: "#667eea", fontSize: "18px" }}>{checkInCount}</strong>
-                                                    </td>
-                                                    <td>
-                                                        <label
-                                                            style={{
-                                                                display: "flex",
-                                                                alignItems: "center",
-                                                                cursor: togglingId === athlete.athlete_id ? "not-allowed" : "pointer",
-                                                                opacity: togglingId === athlete.athlete_id ? 0.6 : 1,
-                                                            }}
-                                                        >
-                                                            <input
-                                                                type="checkbox"
-                                                                checked={isSubscriptionActive}
-                                                                onChange={() => handleToggleSubscription(athlete.athlete_id, isSubscriptionActive)}
-                                                                disabled={togglingId === athlete.athlete_id}
-                                                                style={{
-                                                                    marginRight: "8px",
-                                                                    cursor: togglingId === athlete.athlete_id ? "not-allowed" : "pointer",
-                                                                }}
-                                                            />
-                                                            <span
-                                                                style={{
-                                                                    color: isSubscriptionActive ? "#4caf50" : "#999",
-                                                                    fontWeight: isSubscriptionActive ? "bold" : "normal",
-                                                                }}
-                                                            >
-                                                                {isSubscriptionActive ? "Activ" : "Inactiv"}
-                                                            </span>
-                                                        </label>
-                                                    </td>
-                                                    <td>
-                                                        {isSubscriptionActive ? (
-                                                            <span style={{ color: "#166534", fontWeight: "bold" }}>Abonament activ</span>
-                                                        ) : (
-                                                            <span style={{ color: "#0f172a", fontWeight: "bold" }}>{paymentAmount} lei</span>
-                                                        )}
-                                                    </td>
-                                                    {editingId === athlete.athlete_id && (
-                                                        <td colSpan="2" style={{ paddingTop: "8px" }}>
-                                                            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                                                                <button
-                                                                    className="btn btn-success"
-                                                                    onClick={saveEditAthlete}
-                                                                    disabled={savingId === athlete.athlete_id}
-                                                                    style={{ padding: "6px 10px" }}
-                                                                >
-                                                                    Salvează
-                                                                </button>
-                                                                <button className="btn btn-secondary" onClick={cancelEdit} style={{ padding: "6px 10px" }}>
-                                                                    Anulează
-                                                                </button>
-                                                                {savingId === athlete.athlete_id && <span style={{ color: "#666" }}>Se salvează...</span>}
-                                                            </div>
+                                                return (
+                                                    <tr
+                                                        key={athlete.athlete_id}
+                                                        onClick={() => navigate(`/athlete/${athlete.athlete_id}`)}
+                                                        style={{
+                                                            cursor: "pointer",
+                                                            transition: "background-color 0.2s",
+                                                        }}
+                                                        onMouseEnter={(e) => (e.target.closest("tr").style.backgroundColor = "#f5f5f5")}
+                                                        onMouseLeave={(e) => (e.target.closest("tr").style.backgroundColor = "")}
+                                                    >
+                                                        <td style={{ width: "50px", fontWeight: "bold" }}>{index + 1}</td>
+                                                        <td style={{ fontWeight: "600" }}>{athlete.athlete_name}</td>
+                                                        <td style={{ width: "120px", textAlign: "center" }}>
+                                                            <strong style={{ color: "#667eea", fontSize: "18px" }}>{checkInCount}</strong>
                                                         </td>
-                                                    )}
-                                                </tr>
-                                            );
-                                        })}
+                                                        <td style={{ width: "100px", textAlign: "center" }}>
+                                                            <label
+                                                                style={{
+                                                                    display: "flex",
+                                                                    alignItems: "center",
+                                                                    justifyContent: "center",
+                                                                    cursor: togglingId === athlete.athlete_id ? "not-allowed" : "pointer",
+                                                                    opacity: togglingId === athlete.athlete_id ? 0.6 : 1,
+                                                                }}
+                                                                onClick={(e) => e.stopPropagation()}
+                                                            >
+                                                                <input
+                                                                    type="checkbox"
+                                                                    checked={isSubscriptionActive}
+                                                                    onChange={() => handleToggleSubscription(athlete.athlete_id, isSubscriptionActive)}
+                                                                    disabled={togglingId === athlete.athlete_id}
+                                                                    style={{
+                                                                        cursor: togglingId === athlete.athlete_id ? "not-allowed" : "pointer",
+                                                                    }}
+                                                                />
+                                                            </label>
+                                                        </td>
+                                                        <td style={{ width: "100px", textAlign: "center", fontWeight: "bold" }}>{paymentAmount.toFixed(2)} lei</td>
+                                                    </tr>
+                                                );
+                                            })}
                                     </tbody>
                                 </table>
                             </div>

@@ -2,10 +2,16 @@ import React, { useState, useEffect } from "react";
 import TrainingSessionsManager from "../components/TrainingSessionsManager";
 import MonthlyStats from "../components/MonthlyStats";
 import UserManagement from "../components/UserManagement";
+import SettingsPage from "./SettingsPage";
 import { getCurrentUser } from "../services/api";
 
 function ManagerDashboard({ onLogout }) {
-    const [activeTab, setActiveTab] = useState("sessions");
+    // Prioritate: localStorage -> default "sessions"
+    const getInitialTab = () => {
+        return localStorage.getItem("managerActiveTab") || "sessions";
+    };
+
+    const [activeTab, setActiveTab] = useState(getInitialTab());
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false);
 
@@ -23,6 +29,7 @@ function ManagerDashboard({ onLogout }) {
 
     const handleTabChange = (tab) => {
         setActiveTab(tab);
+        localStorage.setItem("managerActiveTab", tab);
         setMobileMenuOpen(false);
     };
 
@@ -57,6 +64,9 @@ function ManagerDashboard({ onLogout }) {
                                 <button className={`mobile-menu-item ${activeTab === "stats" ? "active" : ""}`} onClick={() => handleTabChange("stats")}>
                                     Statistici
                                 </button>
+                                <button className={`mobile-menu-item ${activeTab === "settings" ? "active" : ""}`} onClick={() => handleTabChange("settings")}>
+                                    Setări
+                                </button>
                                 {isAdmin && (
                                     <button className={`mobile-menu-item ${activeTab === "users" ? "active" : ""}`} onClick={() => handleTabChange("users")}>
                                         Utilizatori
@@ -75,8 +85,11 @@ function ManagerDashboard({ onLogout }) {
                     <button className={`btn ${activeTab === "sessions" ? "btn-primary" : "btn-secondary"}`} style={{ marginRight: "10px" }} onClick={() => handleTabChange("sessions")}>
                         Antrenamente
                     </button>
-                    <button className={`btn ${activeTab === "stats" ? "btn-primary" : "btn-secondary"}`} onClick={() => handleTabChange("stats")}>
+                    <button className={`btn ${activeTab === "stats" ? "btn-primary" : "btn-secondary"}`} style={{ marginRight: "10px" }} onClick={() => handleTabChange("stats")}>
                         Statistici
+                    </button>
+                    <button className={`btn ${activeTab === "settings" ? "btn-primary" : "btn-secondary"}`} onClick={() => handleTabChange("settings")}>
+                        Setări
                     </button>
                     {isAdmin && (
                         <button className={`btn ${activeTab === "users" ? "btn-primary" : "btn-secondary"}`} style={{ marginLeft: "10px" }} onClick={() => handleTabChange("users")}>
@@ -87,6 +100,7 @@ function ManagerDashboard({ onLogout }) {
 
                 {activeTab === "sessions" && <TrainingSessionsManager />}
                 {activeTab === "stats" && <MonthlyStats />}
+                {activeTab === "settings" && <SettingsPage onBack={() => setActiveTab("sessions")} />}
                 {activeTab === "users" && <UserManagement />}
             </div>
         </div>

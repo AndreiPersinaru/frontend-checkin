@@ -20,7 +20,7 @@ api.interceptors.request.use(
     },
     (error) => {
         return Promise.reject(error);
-    }
+    },
 );
 
 // Interceptor pentru a reîmprospăta token-ul dacă expiră
@@ -60,7 +60,7 @@ api.interceptors.response.use(
             localStorage.removeItem("refresh_token");
             return Promise.reject(refreshError);
         }
-    }
+    },
 );
 
 // Auth
@@ -90,11 +90,19 @@ export const deleteTrainingSession = (id) => {
 };
 
 // Check-ins
-export const createCheckIn = (phoneNumber, athleteName = "") => {
-    return api.post("/checkins/", {
-        phone_number: phoneNumber,
-        athlete_name: athleteName,
-    });
+export const createCheckIn = (phoneNumber, athleteIdOrName = "") => {
+    // Dacă e number, e athlete_id; dacă e string, e athlete_name (legacy)
+    if (typeof athleteIdOrName === "number") {
+        return api.post("/checkins/", {
+            phone_number: phoneNumber,
+            athlete_id: athleteIdOrName,
+        });
+    } else {
+        return api.post("/checkins/", {
+            phone_number: phoneNumber,
+            athlete_name: athleteIdOrName,
+        });
+    }
 };
 
 export const getCheckIns = () => {
@@ -143,6 +151,72 @@ export const updateUser = (userId, data) => {
 
 export const deleteUser = (userId) => {
     return api.delete(`/users/${userId}/`);
+};
+
+// Phone Numbers & Athletes
+export const getAthletesForPhone = (phoneNumber) => {
+    return api.post("/phone-numbers/get_athletes/", { phone_number: phoneNumber });
+};
+
+export const createAthleteForPhone = (phoneNumber, athleteName) => {
+    return api.post("/phone-numbers/create_athlete/", {
+        phone_number: phoneNumber,
+        athlete_name: athleteName,
+    });
+};
+
+export const addAthleteViaPin = (phoneNumber, athletePin) => {
+    return api.post("/phone-numbers/add_athlete/", {
+        phone_number: phoneNumber,
+        athlete_pin: athletePin,
+    });
+};
+
+export const removeAthleteFromPhone = (phoneNumber, athleteId) => {
+    return api.post("/phone-numbers/remove_athlete/", {
+        phone_number: phoneNumber,
+        athlete_id: athleteId,
+    });
+};
+
+// Get athlete by ID
+export const getAthlete = (athleteId) => {
+    return api.get(`/athletes/${athleteId}/`);
+};
+
+export const getAthletePhones = (athleteId) => {
+    return api.get(`/athletes/${athleteId}/phones/`);
+};
+
+export const getAthleteAttendance = (athleteId, year, month) => {
+    return api.get(`/athletes/${athleteId}/attendance/?year=${year}&month=${month}`);
+};
+
+export const updateAthleteAttendance = (athleteId, data) => {
+    return api.post(`/athletes/${athleteId}/attendance/`, data);
+};
+
+// App Settings
+export const getAppSettings = () => {
+    return api.get("/app-settings/current/");
+};
+
+export const updateAppSettings = (data) => {
+    return api.patch("/app-settings/1/", data);
+};
+
+// Athlete Payments
+export const getAthletePayments = (filters = {}) => {
+    const params = new URLSearchParams(filters);
+    return api.get(`/athlete-payments/?${params.toString()}`);
+};
+
+export const createAthletePayment = (data) => {
+    return api.post("/athlete-payments/", data);
+};
+
+export const updateAthletePayment = (paymentId, data) => {
+    return api.patch(`/athlete-payments/${paymentId}/`, data);
 };
 
 export default api;

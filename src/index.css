@@ -103,9 +103,10 @@ code {
     border: 1px solid var(--border);
     border-radius: 10px;
     font-size: 15px;
-    margin-bottom: 14px;
     background: #fff;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
 }
 
 .input:focus,
@@ -470,5 +471,338 @@ html {
     .btn {
         padding: 12px 16px;
         font-size: 15px;
+    }
+}
+
+/* Athlete Detail */
+.athlete-detail .athlete-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 16px;
+}
+
+.athlete-detail .athlete-pin {
+    background: #f8fafc;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 16px;
+    text-align: center;
+    min-width: 140px;
+}
+
+.athlete-detail .info-grid {
+    margin-bottom: 20px;
+}
+
+.athlete-detail .info-card {
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 18px;
+}
+
+.athlete-detail .info-card h3 {
+    margin-bottom: 12px;
+}
+
+.athlete-detail .detail-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.athlete-detail .detail-card-header h3 {
+    margin: 0;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.athlete-detail .detail-card-header .btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.athlete-detail .detail-card-header h3 {
+    margin: 0;
+    flex-shrink: 1;
+    min-width: 0;
+}
+
+.athlete-detail .detail-card-header .btn {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
+
+.athlete-detail .name-display {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #f9fafb;
+    flex-wrap: nowrap;
+}
+
+.athlete-detail .name-display .btn {
+    flex-shrink: 0;
+}
+
+.athlete-detail .name-text {
+    font-weight: 700;
+    font-size: 18px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.athlete-detail .name-pin {
+    color: var(--muted);
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.athlete-detail .name-edit {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.athlete-detail .name-edit-actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.athlete-detail .field-row {
+    margin-bottom: 14px;
+}
+
+.athlete-detail .field-row label {
+    display: block;
+    font-size: 14px;
+    color: var(--muted);
+    margin-bottom: 6px;
+}
+
+.athlete-detail .field-actions {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+}
+
+.athlete-detail .phone-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 12px;
+}
+
+.athlete-detail .phone-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    background: #f9fafb;
+}
+
+.athlete-detail .phone-add {
+    display: flex;
+    gap: 10px;
+}
+
+.athlete-detail .calendar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.athlete-detail .calendar-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.athlete-detail .calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+    gap: 8px;
+    margin-bottom: 16px;
+}
+
+.athlete-detail .calendar-day {
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+    background: #fff;
+    font-weight: 600;
+    cursor: pointer;
+}
+
+.athlete-detail .calendar-day-header {
+    background: #f3f4f6;
+    cursor: default;
+}
+
+.athlete-detail .calendar-day.empty {
+    border: none;
+    background: transparent;
+    cursor: default;
+}
+
+.athlete-detail .calendar-day-missed {
+    border: 2px solid #9ca3af;
+    color: #6b7280;
+    background: #fff;
+}
+
+.athlete-detail .calendar-day-present {
+    background: #dcfce7;
+    border-color: #16a34a;
+    color: #166534;
+}
+
+.athlete-detail .calendar-day-partial {
+    background: #fef9c3;
+    border-color: #eab308;
+    color: #854d0e;
+}
+
+.athlete-detail .calendar-day-selected {
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+    border-color: #2563eb;
+}
+
+.athlete-detail .attendance-list {
+    border-top: 1px solid var(--border);
+    padding-top: 12px;
+}
+
+.athlete-detail .attendance-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px dashed var(--border);
+}
+
+.athlete-detail .session-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.athlete-detail .session-name {
+    font-weight: 600;
+}
+
+.athlete-detail .session-time {
+    color: #666;
+    font-size: 13px;
+}
+
+.athlete-detail .attendance-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.athlete-detail .status-present {
+    color: #166534;
+    font-weight: 600;
+}
+
+.athlete-detail .status-missed {
+    color: #9ca3af;
+    font-weight: 600;
+}
+
+@media (max-width: 768px) {
+    .athlete-detail .athlete-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .athlete-detail .info-grid {
+        /* single card now, no grid */
+    }
+
+    .athlete-detail .field-actions,
+    .athlete-detail .phone-add,
+    .athlete-detail .calendar-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .athlete-detail .detail-card-header {
+        /* Keep as row, just make button smaller */
+    }
+
+    .athlete-detail .detail-card-header .btn {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+
+    .athlete-detail .name-display {
+        /* Keep as row with nowrap */
+        gap: 8px;
+    }
+
+    .athlete-detail .name-text {
+        font-size: 16px;
+        flex: 1;
+        min-width: 0;
+    }
+
+    .athlete-detail .calendar-day {
+        height: 36px;
+        font-size: 13px;
+    }
+
+    .athlete-detail .attendance-item {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .athlete-detail .session-info {
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .athlete-detail .session-time::before {
+        content: "(";
+    }
+
+    .athlete-detail .session-time::after {
+        content: ")";
+    }
+
+    .athlete-detail .attendance-actions {
+        width: 100%;
+        gap: 8px;
+    }
+
+    .athlete-detail .attendance-actions .status-present,
+    .athlete-detail .attendance-actions .status-missed {
+        flex: 1;
+        text-align: center;
+    }
+
+    .athlete-detail .attendance-actions .btn {
+        flex: 1;
     }
 }

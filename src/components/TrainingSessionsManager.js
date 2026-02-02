@@ -59,6 +59,11 @@ function TrainingSessionsManager() {
         e.preventDefault();
         setError("");
 
+        if (formData.start_time >= formData.end_time) {
+            setError("Ora de început trebuie să fie mai mică decât ora de sfărșit");
+            return;
+        }
+
         try {
             const dataToSend = {
                 name: formData.name,
@@ -90,6 +95,7 @@ function TrainingSessionsManager() {
     };
 
     const handleEdit = (session) => {
+        setError("");
         setEditingSession(session);
         setFormData({
             name: session.name,
@@ -212,8 +218,8 @@ function TrainingSessionsManager() {
                         <tr>
                             <th>Nume</th>
                             <th>Frecvență</th>
-                            <th>Detalii</th>
-                            <th>Orar</th>
+                            <th>Zi</th>
+                            <th>Ora</th>
                             <th>Status</th>
                             <th>Acțiuni</th>
                         </tr>
