@@ -277,7 +277,8 @@ function MonthlyStats() {
                                     <strong>Total sportivi activi:</strong> {stats.filter((athlete) => athlete.athlete_name.toLowerCase().includes(searchQuery.toLowerCase())).length}
                                 </p>
                                 <p style={{ margin: "5px 0", fontSize: "16px" }}>
-                                    <strong>Total check-in-uri:</strong> {stats.filter((athlete) => athlete.athlete_name.toLowerCase().includes(searchQuery.toLowerCase())).reduce((sum, s) => sum + s.checkin_count, 0)}
+                                    <strong>Total check-in-uri:</strong>{" "}
+                                    {stats.filter((athlete) => athlete.athlete_name.toLowerCase().includes(searchQuery.toLowerCase())).reduce((sum, s) => sum + s.checkin_count, 0)}
                                 </p>
                                 <p style={{ margin: "5px 0", fontSize: "16px" }}>
                                     <strong>Media check-in-uri/sportiv:</strong>{" "}
